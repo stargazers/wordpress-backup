@@ -1,0 +1,54 @@
+#!/bin/bash
+
+###########################################################
+# Wordpress backup script
+# 
+# 	Author Aleksi Räsänen <aleksi.rasanen@runosydan.net>
+#	Licensed under GNU AGPL v3
+#
+###########################################################
+
+# Where your websites are stored?
+# NOTE! This script excepts that path structure is like this:
+# - sites/sitename/www/
+# Also it is better to give full path so you can run this as a cronjob.
+SITES_BASEPATH="/home/stargazers/sites"
+TEMP_PATH="/tmp"
+
+BACKUP_SSH_USER="stargazers"
+BACKUP_SERVER="simone"
+BACKUP_SERVER_PATH="backup"
+
+# Chek if we have enough arguments
+if [ "$#" -ne 1 ]; then
+	echo "Give the blog as an argument you want to backup"
+	echo "Example: $0 thewayofdevops.com"
+	exit 1
+fi
+
+# Move to the folder. Maybe we will add more checks later,
+# but on my usage there is no need for it.
+cd "$SITES_BASEPATH/$1/www/"
+
+# Get database settings
+DB_NAME=$(grep DB_NAME < wp-config.php | cut -d "'" -f 4)
+DB_USER=$(grep DB_USER < wp-config.php | cut -d "'" -f 4)
+DB_PASS=$(grep DB_PASSWORD < wp-config.php | cut -d "'" -f 4  )
+
+# Current day in YYYY-MM-DD format
+CURRENT_DATE=$(date "+%Y-%m-%d")
+
+# Create database dump
+mysqldump -u $DB_USER -p$DB_PASS $DB_NAME > $DB_NAME-$CURRENT_DATE.sql
+
+# Move back to previous directory without echoing its output
+cd - > /dev/null
+
+# Create temporary .tar file
+cd $SITES_BASEPATH/
+tar cfP $TEMP_PATH/$1-$CURRENT_DATE.tar $1/www
+cd - > /dev/null
+
+# Copy the .tar file to another server.
+# Note that you NEED to have SSH-keys already added!
+scp $TEMP_PATH/$1-$CURRENT_DATE.tar $BACKUP_SERVER:$BACKUP_SERVER_PATH/$1-$CURRENT_DATE.tar
