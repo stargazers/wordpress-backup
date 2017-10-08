@@ -19,6 +19,17 @@ BACKUP_SSH_USER="stargazers"
 BACKUP_SERVER="simone"
 BACKUP_SERVER_PATH="backup"
 
+# By default we use SCP to copy generated .tar file to another server.
+# Sometimes we do not want to do that so we can override the USE_SCP variable
+# here or on command line.
+#
+# On command line it would be "USE_SCP=false ./backup-wordpress sitename"
+# or alternatively "export USE_SCP=false" and then just call the script
+# in normal way.
+if [ "$USE_SCP" == "" ]; then
+	USE_SCP=true
+fi
+
 # Chek if we have enough arguments
 if [ "$#" -ne 1 ]; then
 	echo "Give the blog as an argument you want to backup"
@@ -51,4 +62,6 @@ cd - > /dev/null
 
 # Copy the .tar file to another server.
 # Note that you NEED to have SSH-keys already added!
-scp $TEMP_PATH/$1-$CURRENT_DATE.tar $BACKUP_SSH_USER@$BACKUP_SERVER:$BACKUP_SERVER_PATH/$1-$CURRENT_DATE.tar
+if [ "$USE_SCP" == true ]; then
+	scp $TEMP_PATH/$1-$CURRENT_DATE.tar $BACKUP_SSH_USER@$BACKUP_SERVER:$BACKUP_SERVER_PATH/$1-$CURRENT_DATE.tar
+fi
