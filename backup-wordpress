@@ -51,4 +51,4 @@ cd - > /dev/null
 
 # Copy the .tar file to another server.
 # Note that you NEED to have SSH-keys already added!
-scp $TEMP_PATH/$1-$CURRENT_DATE.tar $BACKUP_SERVER:$BACKUP_SERVER_PATH/$1-$CURRENT_DATE.tar
+scp $TEMP_PATH/$1-$CURRENT_DATE.tar $BACKUP_SSH_USER@$BACKUP_SERVER:$BACKUP_SERVER_PATH/$1-$CURRENT_DATE.tar
